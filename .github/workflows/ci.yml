@@ -23,5 +23,5 @@ jobs:
       - run: dotnet --version
       - run: dotnet restore ServiceStats.slnx
       - run: dotnet build ServiceStats.slnx --configuration Release --no-restore
-      - run: dotnet test ServiceStats.slnx --configuration Release --no-build
+      - run: dotnet run --project tests/ServiceStats.Tests/ServiceStats.Tests.csproj --configuration Release --no-build
       - run: dotnet pack src/ServiceStats/ServiceStats.csproj --configuration Release --no-build

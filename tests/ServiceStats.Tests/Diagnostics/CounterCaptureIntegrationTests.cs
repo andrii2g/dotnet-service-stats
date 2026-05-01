@@ -10,6 +10,7 @@ public sealed class CounterCaptureIntegrationTests
     [Fact]
     public async Task CaptureAsync_ReturnsSnapshotForManagedTarget()
     {
+        var cancellationToken = TestContext.Current.CancellationToken;
         var targetDll = typeof(Marker).Assembly.Location;
         var startInfo = new ProcessStartInfo("dotnet", $"\"{targetDll}\" --mode alloc")
         {
@@ -23,13 +24,13 @@ public sealed class CounterCaptureIntegrationTests
 
         try
         {
-            var line = await process!.StandardOutput.ReadLineAsync();
+            var line = await process!.StandardOutput.ReadLineAsync(cancellationToken);
             Assert.NotNull(line);
 
             var pid = int.Parse(line!);
             var captureService = new CounterCaptureService(new EventCounterParser());
             var identity = new ProcessIdentity(pid, "dotnet", null, null, true, true, null);
-            var result = await captureService.CaptureAsync(identity, TimeSpan.FromSeconds(3), CancellationToken.None);
+            var result = await captureService.CaptureAsync(identity, TimeSpan.FromSeconds(3), cancellationToken);
 
             Assert.Equal(ExitCodes.Success, result.ExitCode);
             Assert.True(result.Snapshot.Process.Pid > 0);
@@ -44,7 +45,7 @@ public sealed class CounterCaptureIntegrationTests
             if (process is { HasExited: false })
             {
                 process.Kill(entireProcessTree: true);
-                await process.WaitForExitAsync();
+                await process.WaitForExitAsync(cancellationToken);
             }
         }
     }
