@@ -18,9 +18,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.661903" />
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.2.2" />
-    <PackageReference Include="Spectre.Console" Version="0.54.0" />
-    <PackageReference Include="System.CommandLine" Version="2.0.6" />
-    <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.6" />
+    <PackageReference Include="Spectre.Console" Version="0.55.2" />
+    <PackageReference Include="System.CommandLine" Version="2.0.7" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.7" />
   </ItemGroup>
 
   <ItemGroup>
