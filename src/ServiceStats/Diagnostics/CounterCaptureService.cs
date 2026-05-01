@@ -94,7 +94,7 @@ internal sealed class CounterCaptureService
             await processingTask;
 
             var processSnapshot = ProcessMetricsCollector.Capture(process, startCpu, startWallClock, warnings);
-            var runtimeSnapshot = runtimeAggregator.Build(warnings);
+            var runtimeSnapshot = runtimeAggregator.Build();
             var status = DetermineStatus(processSnapshot, runtimeSnapshot);
 
             if (runtimeSnapshot is null)
@@ -160,11 +160,18 @@ internal sealed class CounterCaptureService
 
         var hasRuntimeData =
             runtimeSnapshot.GcHeapSizeBytes is not null ||
+            runtimeSnapshot.LohSizeBytes is not null ||
             runtimeSnapshot.AllocationRateBytesPerSecond is not null ||
+            runtimeSnapshot.GcPauseTimePercentage is not null ||
+            runtimeSnapshot.HeapFragmentationPercentage is not null ||
             runtimeSnapshot.ExceptionRatePerSecond is not null ||
             runtimeSnapshot.Gen0CollectionsPerSecond is not null ||
             runtimeSnapshot.Gen1CollectionsPerSecond is not null ||
             runtimeSnapshot.Gen2CollectionsPerSecond is not null ||
+            runtimeSnapshot.FinalizationQueueLength is not null ||
+            runtimeSnapshot.ActiveTimerCount is not null ||
+            runtimeSnapshot.MethodsJittedCount is not null ||
+            runtimeSnapshot.IlBytesJitted is not null ||
             runtimeSnapshot.ThreadPoolThreadCount is not null ||
             runtimeSnapshot.ThreadPoolQueueLength is not null ||
             runtimeSnapshot.MonitorLockContentionCountPerSecond is not null;
@@ -185,76 +192,4 @@ internal sealed class CounterCaptureService
     }
 
     internal sealed record CaptureResult(ServiceStatsSnapshot Snapshot, int ExitCode);
-
-    private sealed class RuntimeCounterAggregator
-    {
-        private readonly Dictionary<string, double> _rawCounters = new(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, List<double>> _rates = new(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, double> _gauges = new(StringComparer.OrdinalIgnoreCase);
-
-        public void Observe(CounterSample sample)
-        {
-            if (!CounterNameMap.RequiredCounters.Contains(sample.Name))
-            {
-                return;
-            }
-
-            if (sample.Increment is double increment)
-            {
-                _rawCounters[sample.Name] = increment;
-                GetRateBucket(sample.Name).Add(increment);
-            }
-            else if (sample.Mean is double mean)
-            {
-                _rawCounters[sample.Name] = mean;
-                _gauges[sample.Name] = mean;
-            }
-        }
-
-        public RuntimeSnapshot? Build(ICollection<string> warnings)
-        {
-            if (_rawCounters.Count == 0 && _gauges.Count == 0)
-            {
-                return null;
-            }
-
-            return new RuntimeSnapshot(
-                RuntimeProviderName: "System.Runtime",
-                GcHeapSizeBytes: AsLongGauge(CounterNameMap.GcHeapSize),
-                AllocationRateBytesPerSecond: GetGauge(CounterNameMap.AllocationRate) ?? GetAverageRate(CounterNameMap.AllocationRate),
-                ExceptionRatePerSecond: GetAverageRate(CounterNameMap.ExceptionCount) ?? GetGauge(CounterNameMap.ExceptionCount),
-                Gen0CollectionsPerSecond: GetAverageRate(CounterNameMap.Gen0Count),
-                Gen1CollectionsPerSecond: GetAverageRate(CounterNameMap.Gen1Count),
-                Gen2CollectionsPerSecond: GetAverageRate(CounterNameMap.Gen2Count),
-                ThreadPoolThreadCount: AsIntGauge(CounterNameMap.ThreadPoolThreadCount),
-                ThreadPoolQueueLength: AsIntGauge(CounterNameMap.ThreadPoolQueueLength),
-                MonitorLockContentionCountPerSecond: GetAverageRate(CounterNameMap.MonitorLockContentionCount),
-                RawCounters: new Dictionary<string, double>(_rawCounters, StringComparer.OrdinalIgnoreCase));
-        }
-
-        private List<double> GetRateBucket(string name)
-        {
-            if (!_rates.TryGetValue(name, out var values))
-            {
-                values = [];
-                _rates[name] = values;
-            }
-
-            return values;
-        }
-
-        private double? GetAverageRate(string name)
-            => _rates.TryGetValue(name, out var values) && values.Count > 0
-                ? values.Average()
-                : null;
-
-        private double? GetGauge(string name)
-            => _gauges.TryGetValue(name, out var value) ? value : null;
-
-        private long? AsLongGauge(string name)
-            => GetGauge(name) is double value ? (long)Math.Round(value) : null;
-
-        private int? AsIntGauge(string name)
-            => GetGauge(name) is double value ? (int)Math.Round(value) : null;
-    }
 }

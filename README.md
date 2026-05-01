@@ -1,6 +1,6 @@
 # dotnet-service-stats
 
-`dss` is a small .NET global tool for local diagnostics triage. It attaches to a running local .NET process, collects a short `System.Runtime` EventPipe counter sample, and prints either a readable summary or stable JSON.
+`dss` is a small .NET console application for local diagnostics triage. It attaches to a running local .NET process, collects a short `System.Runtime` EventPipe counter sample, and prints either a readable summary or stable JSON.
 
 `dss` attaches using local .NET diagnostics infrastructure and collects a short EventPipe counter sample. It does not modify the target application and does not require code changes in the target application.
 
@@ -10,6 +10,7 @@
 - Captures a short runtime and process snapshot for one target process.
 - Emits either console output or JSON for automation.
 - Supports `list`, `snap --pid`, and `snap --name` on Windows and Linux.
+- Reports core runtime metrics including GC heap, LOH size, GC pause percentage, heap fragmentation, active timer count, and JIT activity.
 
 ## What It Does Not Do
 
@@ -17,20 +18,47 @@
 - Dumps, traces, or remote attach.
 - ASP.NET Core, Kestrel, EF Core, or OpenTelemetry-specific analysis in V1.
 
-## Install
+## Build
+
+Project naming:
+
+- Repository: `dotnet-service-stats`
+- Project path: `src/ServiceStats`
+- Test project path: `tests/ServiceStats.Tests`
+- Built executable name: `dss`
+
+Build from source:
 
 ```bash
-dotnet tool install --global A2G.ServiceStats
-```
-
-For local development from this repo:
-
-```bash
-dotnet pack src/A2G.ServiceStats/A2G.ServiceStats.csproj -c Release
-dotnet tool install --global --add-source ./src/A2G.ServiceStats/nupkg A2G.ServiceStats
+dotnet build ServiceStats.slnx -c Release
 ```
 
 ## Usage
+
+Run directly from source:
+
+```bash
+dotnet run --project src/ServiceStats/ServiceStats.csproj -- list
+dotnet run --project src/ServiceStats/ServiceStats.csproj -- snap --pid 1234
+```
+
+Run the built executable:
+
+Windows:
+
+```powershell
+.\src\ServiceStats\bin\Release\net10.0\dss.exe list
+.\src\ServiceStats\bin\Release\net10.0\dss.exe snap --pid 1234
+```
+
+Linux:
+
+```bash
+./src/ServiceStats/bin/Release/net10.0/dss list
+./src/ServiceStats/bin/Release/net10.0/dss snap --pid 1234
+```
+
+Supported commands:
 
 ```bash
 dss list
@@ -50,5 +78,3 @@ On Linux, `--service` is intentionally not supported in V1. Use `--pid` or `--na
 
 - [limitations](docs/limitations.md)
 - [troubleshooting](docs/troubleshooting.md)
-- [metrics roadmap](docs/metrics-roadmap.md)
-- [implementation plan](docs/PLAN.md)

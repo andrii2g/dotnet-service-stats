@@ -67,11 +67,18 @@ internal sealed class ConsoleSnapshotRenderer
         grid.AddColumn();
         grid.AddColumn();
         grid.AddRow("GC heap:", SizeFormatter.Format(snapshot.GcHeapSizeBytes));
+        grid.AddRow("LOH size:", SizeFormatter.Format(snapshot.LohSizeBytes));
+        grid.AddRow("GC pause:", snapshot.GcPauseTimePercentage is double pause ? $"{pause:F1}%" : "n/a");
+        grid.AddRow("Heap fragmentation:", snapshot.HeapFragmentationPercentage is double fragmentation ? $"{fragmentation:F1}%" : "n/a");
         grid.AddRow("Allocation rate:", snapshot.AllocationRateBytesPerSecond is double alloc ? $"{SizeFormatter.Format((long)alloc)}/s" : "n/a");
         grid.AddRow("Exceptions:", snapshot.ExceptionRatePerSecond is double exRate ? $"{exRate:F1}/s" : "n/a");
         grid.AddRow("Gen0 collections:", snapshot.Gen0CollectionsPerSecond is double gen0 ? $"{gen0:F1}/s" : "n/a");
         grid.AddRow("Gen1 collections:", snapshot.Gen1CollectionsPerSecond is double gen1 ? $"{gen1:F1}/s" : "n/a");
         grid.AddRow("Gen2 collections:", snapshot.Gen2CollectionsPerSecond is double gen2 ? $"{gen2:F1}/s" : "n/a");
+        grid.AddRow("Finalization queue:", snapshot.FinalizationQueueLength?.ToString() ?? "n/a");
+        grid.AddRow("Active timers:", snapshot.ActiveTimerCount?.ToString() ?? "n/a");
+        grid.AddRow("Methods jitted:", snapshot.MethodsJittedCount?.ToString() ?? "n/a");
+        grid.AddRow("IL bytes jitted:", SizeFormatter.Format(snapshot.IlBytesJitted));
         grid.AddRow("ThreadPool threads:", snapshot.ThreadPoolThreadCount?.ToString() ?? "n/a");
         grid.AddRow("ThreadPool queue:", snapshot.ThreadPoolQueueLength?.ToString() ?? "n/a");
         grid.AddRow("Lock contentions:", snapshot.MonitorLockContentionCountPerSecond is double locks ? $"{locks:F1}/s" : "n/a");
