@@ -1,0 +1,13 @@
+bin/
+obj/
+.vs/
+.vscode/
+.idea/
+.nuget-packages/
+.dotnet-home/
+artifacts/
+TestResults/
+*.user
+*.suo
+*.nupkg
+*.snupkg
