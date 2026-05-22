@@ -1,6 +1,6 @@
 # dotnet-service-stats
 
-`dss` is a small .NET console application for local diagnostics triage. It attaches to a running local .NET process, collects a short `System.Runtime` EventPipe counter sample, and prints either a readable summary or stable JSON.
+`dss` is a console application for local diagnostics triage. It attaches to a running local .NET process, collects a short `System.Runtime` EventPipe counter sample, and prints either a readable summary or stable JSON.
 
 `dss` attaches using local .NET diagnostics infrastructure and collects a short EventPipe counter sample. It does not modify the target application and does not require code changes in the target application.
 
